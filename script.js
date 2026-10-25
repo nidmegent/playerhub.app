@@ -8,12 +8,14 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwtDh72d1_op6qdud8xX9hw
 
 const TEAM_NAMES = ["LYXEN Div", "NOXIA Div."];
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+const ATTENDANCE_OPTIONS = ["出場する", "出場しない", "人数次第"];
 
 let selectedTeam = TEAM_NAMES[0];
 let currentMonth = new Date();
 let events = [];
-let selectedEventId = null;
 let activeSurvey = null;
+
+/* ---------- GET: JSONP ---------- */
 
 function apiGet(params = {}) {
   return new Promise((resolve, reject) => {
@@ -44,6 +46,7 @@ function apiGet(params = {}) {
 
     window[callbackName] = data => {
       cleanup();
+
       if (!data || data.ok === false) {
         reject(new Error(data?.error || "データの取得に失敗しました。"));
       } else {
@@ -61,29 +64,19 @@ function apiGet(params = {}) {
   });
 }
 
-
-/* ---------- POST: iframe送信 + JSONPで処理結果を確認 ---------- */
+/* ---------- POST: iframe + JSONP result polling ---------- */
 
 function apiPost(payload) {
   return new Promise((resolve, reject) => {
-    if (API_URL.includes("YOUR_GOOGLE")) {
-      reject(new Error("script.js の API_URL を設定してください。"));
-      return;
-    }
-
-    const requestId = (
+    const requestId =
       typeof crypto !== "undefined" &&
       typeof crypto.randomUUID === "function"
-    )
-      ? crypto.randomUUID()
-      : "nd_" + Date.now() + "_" +
-        Math.random().toString(36).slice(2) + "_" +
-        Math.random().toString(36).slice(2);
+        ? crypto.randomUUID()
+        : "nd_" + Date.now() + "_" +
+          Math.random().toString(36).slice(2) + "_" +
+          Math.random().toString(36).slice(2);
 
-    const requestPayload = {
-      ...payload,
-      requestId
-    };
+    const requestPayload = { ...payload, requestId };
 
     let frame = document.getElementById("apiFrame");
 
@@ -139,10 +132,7 @@ function apiPost(payload) {
 
       attempts++;
 
-      apiGet({
-        action: "getPostResult",
-        requestId
-      })
+      apiGet({ action: "getPostResult", requestId })
         .then(result => {
           if (finished) return;
 
@@ -164,16 +154,13 @@ function apiPost(payload) {
           } else {
             finish(
               reject,
-              new Error(
-                result.result.error || "処理に失敗しました。"
-              )
+              new Error(result.result.error || "処理に失敗しました。")
             );
           }
         })
         .catch(error => {
           if (finished) return;
 
-          // 一時的な通信エラーは再試行
           if (attempts < maxAttempts) {
             setTimeout(pollResult, 1000);
           } else {
@@ -183,7 +170,6 @@ function apiPost(payload) {
     }
 
     try {
-      // 先に送信を開始し、結果はJSONPで別途確認する
       form.submit();
       setTimeout(pollResult, 500);
     } catch (error) {
@@ -192,23 +178,32 @@ function apiPost(payload) {
   });
 }
 
+/* ---------- Common helpers ---------- */
 
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>"']/g, ch => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[ch]);
 }
 
 function formatDate(value, withTime = false) {
   if (!value) return "未設定";
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
 
   const options = withTime
-    ? { year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit" }
-    : { year: "numeric", month: "2-digit", day: "2-digit" };
+    ? {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+      }
+    : {
+        year: "numeric", month: "2-digit", day: "2-digit"
+      };
 
   return new Intl.DateTimeFormat("ja-JP", options).format(date);
 }
@@ -237,6 +232,8 @@ function teamEvents() {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/* ---------- Calendar ---------- */
+
 function renderCalendar() {
   const calendar = document.getElementById("calendar");
   if (!calendar) return;
@@ -245,9 +242,10 @@ function renderCalendar() {
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthTitle = document.getElementById("monthTitle");
 
-  monthTitle.textContent = `${year}年 ${month + 1}月`;
+  document.getElementById("monthTitle").textContent =
+    `${year}年 ${month + 1}月`;
+
   calendar.innerHTML = "";
 
   WEEKDAYS.forEach(day => {
@@ -268,56 +266,109 @@ function renderCalendar() {
     const key = localDateKey(date);
     const matches = teamEvents().filter(event => event.date === key);
 
-    const cell = document.createElement(matches.length ? "div" : "div");
+    const cell = document.createElement("div");
     cell.className = "day-cell";
-    if (key === localDateKey(new Date())) cell.classList.add("today");
+
+    if (key === localDateKey(new Date())) {
+      cell.classList.add("today");
+    }
 
     if (matches.length) {
       cell.classList.add("has-event");
+
       if (matches.every(event => !eventIsOpen(event))) {
         cell.classList.add("is-closed");
       }
-      if (matches.some(event => event.id === selectedEventId)) {
-        cell.classList.add("selected");
-      }
-    }
 
-    const number = document.createElement("span");
-    number.className = "day-number";
-    number.textContent = day;
-    cell.appendChild(number);
+      const number = document.createElement("span");
+      number.className = "day-number";
+      number.textContent = day;
+      cell.appendChild(number);
 
-    if (matches.length) {
       const indicator = document.createElement("span");
       indicator.className = "day-indicator";
       indicator.textContent = matches.length > 1
         ? `${matches.length}件`
         : eventIsOpen(matches[0]) ? "受付中" : "締切済";
       cell.appendChild(indicator);
+
       cell.tabIndex = 0;
       cell.setAttribute("role", "button");
       cell.setAttribute("aria-label", `${key}のアンケート`);
+
       cell.addEventListener("click", () => {
         if (matches.length === 1) {
           selectEvent(matches[0]);
         } else {
           renderEventList(key);
           document.getElementById("eventList")?.scrollIntoView({
-            behavior: "smooth", block: "start"
+            behavior: "smooth",
+            block: "start"
           });
         }
       });
+
       cell.addEventListener("keydown", e => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           cell.click();
         }
       });
+    } else {
+      const number = document.createElement("span");
+      number.className = "day-number";
+      number.textContent = day;
+      cell.appendChild(number);
     }
 
     calendar.appendChild(cell);
   }
 }
+
+/* ---------- Public attendance summaries ---------- */
+
+async function renderAttendance(event, container) {
+  if (!container) return;
+
+  container.innerHTML =
+    '<p class="muted">出場状況を読み込み中...</p>';
+
+  try {
+    const result = await apiGet({
+      action: "getPublicSummary",
+      id: event.id
+    });
+
+    const answers = result.answers || [];
+
+    container.innerHTML = ATTENDANCE_OPTIONS.map(status => {
+      const names = answers
+        .filter(answer => answer.attendance === status)
+        .map(answer => answer.activityName);
+
+      return `
+        <div class="attendance-group">
+          <strong>${escapeHTML(status)}（${names.length}人）</strong>
+          <p>${names.length
+            ? names.map(escapeHTML).join("、")
+            : "該当者なし"}</p>
+        </div>
+      `;
+    }).join("");
+
+    if (!answers.length) {
+      container.insertAdjacentHTML(
+        "afterbegin",
+        '<p class="muted attendance-empty">まだ回答がありません。</p>'
+      );
+    }
+  } catch (error) {
+    container.innerHTML =
+      '<p class="message error">出場状況を取得できませんでした。</p>';
+  }
+}
+
+/* ---------- Event list ---------- */
 
 function renderEventList(filterDate = "") {
   const list = document.getElementById("eventList");
@@ -328,30 +379,49 @@ function renderEventList(filterDate = "") {
   );
 
   if (!filtered.length) {
-    list.innerHTML = '<p class="muted">この部門の日程はありません。</p>';
+    list.innerHTML =
+      '<p class="muted">この部門の日程はありません。</p>';
     return;
   }
 
   list.innerHTML = filtered.map(event => `
-    <article class="event-card">
-      <div>
+    <article class="event-card event-card-stack">
+      <div class="event-card-main">
         <h3>${escapeHTML(event.title)}</h3>
         <p>${escapeHTML(formatDate(event.date))} ・
           締切 ${escapeHTML(formatDate(event.deadline, true))}</p>
-        <p>${eventIsOpen(event) ? "● 回答受付中" : "● 締切済み"}</p>
+        <p>${eventIsOpen(event)
+          ? "● 回答受付中"
+          : "● 締切済み"}</p>
       </div>
-      <button class="primary-button" data-event-id="${escapeHTML(event.id)}"
+
+      <button class="primary-button"
+        data-event-id="${escapeHTML(event.id)}"
         ${eventIsOpen(event) ? "" : "disabled"}>
         ${eventIsOpen(event) ? "回答する →" : "締切済み"}
       </button>
+
+      <div class="attendance-summary"
+        data-attendance-id="${escapeHTML(event.id)}">
+        <p class="muted">出場状況を読み込み中...</p>
+      </div>
     </article>
   `).join("");
 
   list.querySelectorAll("[data-event-id]").forEach(button => {
     button.addEventListener("click", () => {
-      const event = events.find(item => item.id === button.dataset.eventId);
+      const event = events.find(
+        item => item.id === button.dataset.eventId
+      );
       if (event) selectEvent(event);
     });
+  });
+
+  filtered.forEach(event => {
+    const container = list.querySelector(
+      `[data-attendance-id="${CSS.escape(event.id)}"]`
+    );
+    renderAttendance(event, container);
   });
 }
 
@@ -368,6 +438,8 @@ function selectEvent(event) {
   window.location.href = url.toString();
 }
 
+/* ---------- Calendar initialization ---------- */
+
 async function initCalendar() {
   const calendar = document.getElementById("calendar");
   if (!calendar) return;
@@ -375,10 +447,14 @@ async function initCalendar() {
   document.querySelectorAll("[data-team]").forEach(button => {
     button.addEventListener("click", () => {
       selectedTeam = button.dataset.team;
+
       document.querySelectorAll("[data-team]").forEach(item => {
         item.classList.toggle("active", item === button);
       });
-      document.getElementById("teamHeading").textContent = selectedTeam;
+
+      const heading = document.getElementById("teamHeading");
+      if (heading) heading.textContent = selectedTeam;
+
       renderCalendar();
       renderEventList();
     });
@@ -386,14 +462,18 @@ async function initCalendar() {
 
   document.getElementById("prevMonth").addEventListener("click", () => {
     currentMonth = new Date(
-      currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() - 1,
+      1
     );
     renderCalendar();
   });
 
   document.getElementById("nextMonth").addEventListener("click", () => {
     currentMonth = new Date(
-      currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      1
     );
     renderCalendar();
   });
@@ -404,11 +484,39 @@ async function initCalendar() {
     renderEventList();
   } catch (error) {
     calendar.innerHTML = "";
+
     const message = document.getElementById("calendarMessage");
     if (message) {
       message.className = "message error";
       message.textContent = error.message;
     }
+  }
+}
+
+/* ---------- Survey page ---------- */
+
+async function loadMemberOptions(team) {
+  const select = document.getElementById("activityName");
+  if (!select) return;
+
+  select.innerHTML =
+    '<option value="">活動名を選択してください</option>';
+
+  const result = await apiGet({
+    action: "listMembers",
+    team
+  });
+
+  (result.members || []).forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    select.appendChild(option);
+  });
+
+  if (!result.members || !result.members.length) {
+    select.innerHTML =
+      '<option value="">登録メンバーがいません</option>';
   }
 }
 
@@ -420,17 +528,25 @@ async function initSurvey() {
   const eventId = params.get("id");
   const team = params.get("team");
 
+  const status = document.getElementById("surveyStatus");
+  const message = document.getElementById("answerMessage");
+  const button = document.getElementById("submitAnswer");
+  const activitySelect = document.getElementById("activityName");
+
   if (!eventId || !TEAM_NAMES.includes(team)) {
-    document.getElementById("surveyStatus").textContent = "URLが正しくありません";
+    status.textContent = "URLが正しくありません";
     form.hidden = true;
     return;
   }
 
-  const message = document.getElementById("answerMessage");
-  const button = document.getElementById("submitAnswer");
+  button.disabled = true;
 
   try {
-    const result = await apiGet({ action: "getEvent", id: eventId });
+    const result = await apiGet({
+      action: "getEvent",
+      id: eventId
+    });
+
     const event = result.event;
 
     if (!event || event.team !== team) {
@@ -438,19 +554,33 @@ async function initSurvey() {
     }
 
     activeSurvey = event;
+
     document.getElementById("surveyTitle").textContent = event.title;
     document.getElementById("surveyTeam").textContent = event.team;
-    document.getElementById("surveyDate").textContent = formatDate(event.date);
+    document.getElementById("surveyDate").textContent =
+      formatDate(event.date);
     document.getElementById("surveyDeadline").textContent =
       formatDate(event.deadline, true);
 
+    await loadMemberOptions(event.team);
+
     if (!eventIsOpen(event)) {
-      document.getElementById("surveyStatus").textContent = "回答締切済み";
-      document.getElementById("surveyStatus").classList.add("closed");
+      status.textContent = "回答締切済み";
+      status.classList.add("closed");
       button.disabled = true;
+      activitySelect.disabled = true;
       message.textContent = "このアンケートは締切済みです。";
-    } else {
-      document.getElementById("surveyStatus").textContent = "回答受付中";
+      return;
+    }
+
+    status.textContent = "回答受付中";
+    button.disabled = false;
+
+    if (activitySelect.options.length <= 1) {
+      button.disabled = true;
+      message.className = "message error";
+      message.textContent =
+        "登録メンバーがありません。管理者にMembersシートの確認を依頼してください。";
     }
   } catch (error) {
     message.className = "message error";
@@ -461,20 +591,21 @@ async function initSurvey() {
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
+
     if (!activeSurvey || !eventIsOpen(activeSurvey)) {
       message.className = "message error";
       message.textContent = "回答締切済みです。";
       return;
     }
 
-    const activityName = document.getElementById("activityName").value.trim();
+    const activityName = activitySelect.value;
     const attendance = form.querySelector(
       'input[name="attendance"]:checked'
     )?.value;
 
     if (!activityName || !attendance) {
       message.className = "message error";
-      message.textContent = "活動名と出場可否を入力してください。";
+      message.textContent = "活動名と出場可否を選択してください。";
       return;
     }
 
@@ -491,8 +622,10 @@ async function initSurvey() {
         activityName,
         attendance
       });
+
       message.className = "message success";
-      message.textContent = "回答を送信しました！";
+      message.textContent =
+        "回答を送信しました！変更する場合は再度回答してください。";
       form.reset();
     } catch (error) {
       message.className = "message error";
@@ -503,6 +636,8 @@ async function initSurvey() {
     }
   });
 }
+
+/* ---------- Boot ---------- */
 
 document.addEventListener("DOMContentLoaded", () => {
   initCalendar();
