@@ -61,6 +61,9 @@ function apiGet(params = {}) {
   });
 }
 
+
+/* ---------- POST: iframe送信 + JSONPで処理結果を確認 ---------- */
+
 function apiPost(payload) {
   return new Promise((resolve, reject) => {
     if (API_URL.includes("YOUR_GOOGLE")) {
@@ -68,12 +71,28 @@ function apiPost(payload) {
       return;
     }
 
+    const requestId = (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    )
+      ? crypto.randomUUID()
+      : "nd_" + Date.now() + "_" +
+        Math.random().toString(36).slice(2) + "_" +
+        Math.random().toString(36).slice(2);
+
+    const requestPayload = {
+      ...payload,
+      requestId
+    };
+
     let frame = document.getElementById("apiFrame");
+
     if (!frame) {
       frame = document.createElement("iframe");
       frame.name = "apiFrame";
       frame.id = "apiFrame";
       frame.hidden = true;
+      frame.title = "API送信用";
       document.body.appendChild(frame);
     }
 
@@ -84,40 +103,95 @@ function apiPost(payload) {
     form.hidden = true;
 
     const input = document.createElement("input");
+    input.type = "hidden";
     input.name = "payload";
-    input.value = JSON.stringify(payload);
+    input.value = JSON.stringify(requestPayload);
     form.appendChild(input);
     document.body.appendChild(form);
 
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error("送信結果を確認できませんでした。再読み込みして確認してください。"));
-    }, 20000);
+    let finished = false;
+    let attempts = 0;
+    const maxAttempts = 25;
 
     function cleanup() {
-      clearTimeout(timeout);
-      window.removeEventListener("message", onMessage);
       form.remove();
     }
 
-    function onMessage(event) {
-      if (
-        event.origin !== "https://script.google.com" &&
-        event.origin !== "https://script.googleusercontent.com"
-      ) return;
-
-      const result = event.data;
-      if (!result || result.type !== "nimdgent-api-result") return;
-
+    function finish(callback, value) {
+      if (finished) return;
+      finished = true;
       cleanup();
-      if (result.data?.ok) resolve(result.data);
-      else reject(new Error(result.data?.error || "処理に失敗しました。"));
+      callback(value);
     }
 
-    window.addEventListener("message", onMessage);
-    form.submit();
+    function pollResult() {
+      if (finished) return;
+
+      if (attempts >= maxAttempts) {
+        finish(
+          reject,
+          new Error(
+            "処理結果を確認できませんでした。接続設定とデプロイを確認してください。"
+          )
+        );
+        return;
+      }
+
+      attempts++;
+
+      apiGet({
+        action: "getPostResult",
+        requestId
+      })
+        .then(result => {
+          if (finished) return;
+
+          if (result.pending) {
+            setTimeout(pollResult, 800);
+            return;
+          }
+
+          if (!result.result) {
+            finish(
+              reject,
+              new Error("サーバーから処理結果が返されませんでした。")
+            );
+            return;
+          }
+
+          if (result.result.ok) {
+            finish(resolve, result.result);
+          } else {
+            finish(
+              reject,
+              new Error(
+                result.result.error || "処理に失敗しました。"
+              )
+            );
+          }
+        })
+        .catch(error => {
+          if (finished) return;
+
+          // 一時的な通信エラーは再試行
+          if (attempts < maxAttempts) {
+            setTimeout(pollResult, 1000);
+          } else {
+            finish(reject, error);
+          }
+        });
+    }
+
+    try {
+      // 先に送信を開始し、結果はJSONPで別途確認する
+      form.submit();
+      setTimeout(pollResult, 500);
+    } catch (error) {
+      finish(reject, error);
+    }
   });
 }
+
 
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>"']/g, ch => ({
