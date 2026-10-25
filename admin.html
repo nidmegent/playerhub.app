@@ -27,9 +27,12 @@
     <section class="panel" id="loginPanel">
       <h2>管理者ログイン</h2>
       <p class="muted">管理者パスワードを入力してください。</p>
+
       <form id="loginForm">
         <label for="adminPassword">パスワード</label>
-        <input id="adminPassword" type="password" autocomplete="current-password" required>
+        <input id="adminPassword" type="password"
+          autocomplete="current-password" required>
+
         <button class="primary-button" type="submit">ログイン</button>
         <p id="loginMessage" class="message" aria-live="polite"></p>
       </form>
@@ -44,6 +47,7 @@
           </div>
           <button id="logoutButton" class="secondary-button">ログアウト</button>
         </div>
+
         <div class="division-tabs">
           <button class="division-tab active" data-team="LYXEN Div">LYXEN Div</button>
           <button class="division-tab" data-team="NOXIA Div.">NOXIA Div.</button>
@@ -53,18 +57,21 @@
       <section class="panel">
         <p class="eyebrow">CREATE / EDIT</p>
         <h2 id="formHeading">アンケートを作成</h2>
+
         <form id="eventForm" class="admin-form">
           <input type="hidden" id="eventId">
 
           <div class="full">
             <label for="eventTitle">アンケート名</label>
-            <input id="eventTitle" maxlength="100" placeholder="例：PREMIER MATCH #01" required>
+            <input id="eventTitle" maxlength="100"
+              placeholder="例：PREMIER MATCH #01" required>
           </div>
 
           <div>
             <label for="eventDate">試合日</label>
             <input id="eventDate" type="date" required>
           </div>
+
           <div>
             <label for="eventDeadline">回答締切日時</label>
             <input id="eventDeadline" type="datetime-local" required>
@@ -75,10 +82,12 @@
               <input id="notifyCreate" type="checkbox" checked>
               作成・公開時にDiscordへ通知する
             </label>
+
             <label class="checkbox-row">
               <input id="notifyReminder" type="checkbox" checked>
               締切5日前にDiscordへ通知する
             </label>
+
             <label class="checkbox-row">
               <input id="notifyDeadline" type="checkbox" checked>
               締切時にDiscordへ通知する
@@ -87,9 +96,12 @@
 
           <div class="full">
             <button class="primary-button" type="submit">保存する</button>
-            <button id="cancelEdit" class="secondary-button" type="button" hidden>
+
+            <button id="cancelEdit" class="secondary-button"
+              type="button" hidden>
               編集をキャンセル
             </button>
+
             <p id="eventMessage" class="message" aria-live="polite"></p>
           </div>
         </form>
@@ -103,6 +115,7 @@
           </div>
           <button id="refreshButton" class="secondary-button">更新</button>
         </div>
+
         <div id="adminEventList">
           <p class="muted">読み込み中...</p>
         </div>
@@ -111,11 +124,29 @@
       <section class="panel">
         <p class="eyebrow">RESPONSE SUMMARY</p>
         <h2>回答集計</h2>
+
         <label for="summaryEvent">集計するアンケート</label>
-        <select id="summaryEvent"></select>
+        <select id="summaryEvent">
+          <option value="">アンケートを選択</option>
+        </select>
+
         <div id="summaryResult" class="event-list">
           <p class="muted">アンケートを選択してください。</p>
         </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">MEMBER SETTINGS</p>
+        <h2>活動名の登録方法</h2>
+        <p class="muted">
+          Googleスプレッドシートの Members シートで活動名と所属部門を管理します。
+        </p>
+        <p class="muted">
+          A列：activityName ／ B列：team
+        </p>
+        <p class="muted">
+          部門は「LYXEN Div」または「NOXIA Div.」を正確に入力してください。
+        </p>
       </section>
     </div>
 
