@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="description" content="Nimdgent Esports PREMIER 出場管理">
+  <title>PREMIER | Nimdgent Esports</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">N</span>
+      <span>NIMDGENT <small>ESPORTS</small></span>
+    </a>
+    <span class="header-label">PREMIER MANAGEMENT</span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">COMPETE WITH PURPOSE.</p>
+      <h1>PREMIER <span>出場管理</span></h1>
+      <p class="muted">日程を選択して、出場アンケートに回答してください。</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">SELECT DIVISION</p>
+          <h2>所属部門</h2>
+        </div>
+      </div>
+      <div class="division-tabs">
+        <button class="division-tab active" data-team="LYXEN Div">LYXEN Div</button>
+        <button class="division-tab" data-team="NOXIA Div.">NOXIA Div.</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="calendar-top">
+        <button id="prevMonth" class="icon-button" aria-label="前の月">‹</button>
+        <h2 id="monthTitle">読み込み中...</h2>
+        <button id="nextMonth" class="icon-button" aria-label="次の月">›</button>
+      </div>
+      <div class="calendar-legend">
+        <span><i class="legend-dot open"></i>回答受付中</span>
+        <span><i class="legend-dot closed"></i>締切済み</span>
+      </div>
+      <div class="calendar-grid" id="calendar">
+        <div class="loading">日程を読み込んでいます...</div>
+      </div>
+      <div id="calendarMessage" class="message" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR DIVISION</p>
+          <h2 id="teamHeading">LYXEN Div</h2>
+        </div>
+      </div>
+      <div id="eventList" class="event-list">
+        <p class="muted">日程を読み込んでいます...</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>NIMDGENT ESPORTS</span>
+      <span>PREMIER ATTENDANCE SYSTEM</span>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

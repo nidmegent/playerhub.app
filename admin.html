@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a0c">
+  <title>管理画面 | Nimdgent Esports</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">N</span>
+      <span>NIMDGENT <small>ADMIN PANEL</small></span>
+    </a>
+    <a class="back-link" href="index.html">公開ページ →</a>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">ADMINISTRATION</p>
+      <h1>管理者<span>パネル</span></h1>
+      <p class="muted">チームごとの日程・締切・通知・回答を管理します。</p>
+    </section>
+
+    <section class="panel" id="loginPanel">
+      <h2>管理者ログイン</h2>
+      <p class="muted">管理者パスワードを入力してください。</p>
+      <form id="loginForm">
+        <label for="adminPassword">パスワード</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" required>
+        <button class="primary-button" type="submit">ログイン</button>
+        <p id="loginMessage" class="message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <div id="adminContent" hidden>
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">TEAM MANAGEMENT</p>
+            <h2>管理する部門</h2>
+          </div>
+          <button id="logoutButton" class="secondary-button">ログアウト</button>
+        </div>
+        <div class="division-tabs">
+          <button class="division-tab active" data-team="LYXEN Div">LYXEN Div</button>
+          <button class="division-tab" data-team="NOXIA Div.">NOXIA Div.</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">CREATE / EDIT</p>
+        <h2 id="formHeading">アンケートを作成</h2>
+        <form id="eventForm" class="admin-form">
+          <input type="hidden" id="eventId">
+
+          <div class="full">
+            <label for="eventTitle">アンケート名</label>
+            <input id="eventTitle" maxlength="100" placeholder="例：PREMIER MATCH #01" required>
+          </div>
+
+          <div>
+            <label for="eventDate">試合日</label>
+            <input id="eventDate" type="date" required>
+          </div>
+          <div>
+            <label for="eventDeadline">回答締切日時</label>
+            <input id="eventDeadline" type="datetime-local" required>
+          </div>
+
+          <div class="full">
+            <label class="checkbox-row">
+              <input id="notifyCreate" type="checkbox" checked>
+              作成・公開時にDiscordへ通知する
+            </label>
+            <label class="checkbox-row">
+              <input id="notifyReminder" type="checkbox" checked>
+              締切5日前にDiscordへ通知する
+            </label>
+            <label class="checkbox-row">
+              <input id="notifyDeadline" type="checkbox" checked>
+              締切時にDiscordへ通知する
+            </label>
+          </div>
+
+          <div class="full">
+            <button class="primary-button" type="submit">保存する</button>
+            <button id="cancelEdit" class="secondary-button" type="button" hidden>
+              編集をキャンセル
+            </button>
+            <p id="eventMessage" class="message" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SCHEDULE</p>
+            <h2 id="adminListTitle">LYXEN Div のアンケート</h2>
+          </div>
+          <button id="refreshButton" class="secondary-button">更新</button>
+        </div>
+        <div id="adminEventList">
+          <p class="muted">読み込み中...</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">RESPONSE SUMMARY</p>
+        <h2>回答集計</h2>
+        <label for="summaryEvent">集計するアンケート</label>
+        <select id="summaryEvent"></select>
+        <div id="summaryResult" class="event-list">
+          <p class="muted">アンケートを選択してください。</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <span>NIMDGENT ESPORTS</span>
+      <span>ADMINISTRATION</span>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
