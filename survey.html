@@ -28,26 +28,37 @@
       <div id="surveyStatus" class="status-pill">読み込み中...</div>
       <h2 id="surveyTitle">アンケート</h2>
       <p id="surveyTeam" class="team-label"></p>
+
       <div class="event-details">
-        <div><span>試合日時</span><strong id="surveyDate">—</strong></div>
-        <div><span>回答締切</span><strong id="surveyDeadline">—</strong></div>
+        <div>
+          <span>試合日時</span>
+          <strong id="surveyDate">—</strong>
+        </div>
+        <div>
+          <span>回答締切</span>
+          <strong id="surveyDeadline">—</strong>
+        </div>
       </div>
 
       <form id="answerForm">
         <label for="activityName">活動名</label>
-        <input id="activityName" name="activityName" maxlength="40"
-          autocomplete="nickname" placeholder="例：M1yuN" required>
+        <select id="activityName" name="activityName" required>
+          <option value="">活動名を読み込み中...</option>
+        </select>
 
         <fieldset>
           <legend>出場可否</legend>
+
           <label class="choice">
             <input type="radio" name="attendance" value="出場する" required>
             <span>出場する</span>
           </label>
+
           <label class="choice">
             <input type="radio" name="attendance" value="出場しない">
             <span>出場しない</span>
           </label>
+
           <label class="choice">
             <input type="radio" name="attendance" value="人数次第">
             <span>人数次第</span>
@@ -57,9 +68,11 @@
         <button id="submitAnswer" class="primary-button" type="submit">
           回答を送信する
         </button>
+
         <p id="answerMessage" class="message" aria-live="polite"></p>
       </form>
     </section>
+
     <footer class="footer">
       <span>NIMDGENT ESPORTS</span>
       <span>PLAYER RESPONSE</span>
