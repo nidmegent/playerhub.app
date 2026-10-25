@@ -14,12 +14,16 @@ function adminPost(action, extra = {}) {
 function adminMessage(text, type = "") {
   const el = document.getElementById("eventMessage");
   if (!el) return;
+
   el.textContent = text;
   el.className = "message " + type;
 }
 
 function resetEventForm() {
-  document.getElementById("eventForm").reset();
+  const form = document.getElementById("eventForm");
+  if (!form) return;
+
+  form.reset();
   document.getElementById("eventId").value = "";
   document.getElementById("formHeading").textContent = "アンケートを作成";
   document.getElementById("cancelEdit").hidden = true;
@@ -32,17 +36,26 @@ function fillEventForm(event) {
   document.getElementById("eventId").value = event.id;
   document.getElementById("eventTitle").value = event.title;
   document.getElementById("eventDate").value = event.date;
-  document.getElementById("eventDeadline").value = event.deadline.slice(0, 16);
-  document.getElementById("notifyCreate").checked = !!event.notifyCreate;
-  document.getElementById("notifyReminder").checked = !!event.notifyReminder;
-  document.getElementById("notifyDeadline").checked = !!event.notifyDeadline;
-  document.getElementById("formHeading").textContent = "アンケートを編集";
+  document.getElementById("eventDeadline").value =
+    event.deadline.slice(0, 16);
+
+  document.getElementById("notifyCreate").checked =
+    !!event.notifyCreate;
+  document.getElementById("notifyReminder").checked =
+    !!event.notifyReminder;
+  document.getElementById("notifyDeadline").checked =
+    !!event.notifyDeadline;
+
+  document.getElementById("formHeading").textContent =
+    "アンケートを編集";
   document.getElementById("cancelEdit").hidden = false;
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function loadAdminEvents() {
   const result = await adminPost("adminListEvents");
+
   adminEvents = result.events || [];
   renderAdminEvents();
   renderSummaryOptions();
@@ -50,6 +63,7 @@ async function loadAdminEvents() {
 
 function renderAdminEvents() {
   const list = document.getElementById("adminEventList");
+
   const filtered = adminEvents
     .filter(event => event.team === adminTeam)
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -58,12 +72,13 @@ function renderAdminEvents() {
     `${adminTeam} のアンケート`;
 
   if (!filtered.length) {
-    list.innerHTML = '<p class="muted">まだアンケートはありません。</p>';
+    list.innerHTML =
+      '<p class="muted">まだアンケートはありません。</p>';
     return;
   }
 
   list.innerHTML = filtered.map(event => {
-    const count = event.responseCount ?? "—";
+    const count = event.responseCount ?? 0;
     const closed = event.status === "closed" ||
       new Date(event.deadline).getTime() <= Date.now();
 
@@ -72,28 +87,43 @@ function renderAdminEvents() {
         <div>
           <h3>${escapeHTML(event.title)}</h3>
           <p class="muted">${escapeHTML(formatDate(event.date))}</p>
-          <p class="muted">締切：${escapeHTML(formatDate(event.deadline, true))}</p>
-          <p class="muted">回答数：${count} ／ ${closed ? "締切済み" : "受付中"}</p>
+          <p class="muted">
+            締切：${escapeHTML(formatDate(event.deadline, true))}
+          </p>
+          <p class="muted">
+            回答数：${count} ／ ${closed ? "締切済み" : "受付中"}
+          </p>
         </div>
+
         <div class="admin-actions">
-          <button class="secondary-button" data-edit="${escapeHTML(event.id)}">編集</button>
-          <button class="secondary-button danger-button" data-delete="${escapeHTML(event.id)}">削除</button>
+          <button class="secondary-button"
+            data-edit="${escapeHTML(event.id)}">編集</button>
+          <button class="secondary-button danger-button"
+            data-delete="${escapeHTML(event.id)}">削除</button>
         </div>
-      </article>`;
+      </article>
+    `;
   }).join("");
 
   list.querySelectorAll("[data-edit]").forEach(button => {
     button.addEventListener("click", () => {
-      const event = adminEvents.find(item => item.id === button.dataset.edit);
+      const event = adminEvents.find(
+        item => item.id === button.dataset.edit
+      );
       if (event) fillEventForm(event);
     });
   });
 
   list.querySelectorAll("[data-delete]").forEach(button => {
     button.addEventListener("click", async () => {
-      const event = adminEvents.find(item => item.id === button.dataset.delete);
+      const event = adminEvents.find(
+        item => item.id === button.dataset.delete
+      );
       if (!event) return;
-      if (!confirm(`「${event.title}」を削除しますか？\n回答データも削除されます。`)) return;
+
+      if (!confirm(
+        `「${event.title}」を削除しますか？\n回答データも削除されます。`
+      )) return;
 
       try {
         await adminPost("adminDeleteEvent", { id: event.id });
@@ -109,14 +139,22 @@ function renderAdminEvents() {
 function renderSummaryOptions() {
   const select = document.getElementById("summaryEvent");
   const oldValue = select.value;
-  const filtered = adminEvents.filter(event => event.team === adminTeam);
 
-  select.innerHTML = '<option value="">アンケートを選択</option>' +
-    filtered.map(event =>
-      `<option value="${escapeHTML(event.id)}">${escapeHTML(event.title)} (${escapeHTML(event.date)})</option>`
-    ).join("");
+  const filtered = adminEvents.filter(
+    event => event.team === adminTeam
+  );
 
-  if (filtered.some(event => event.id === oldValue)) select.value = oldValue;
+  select.innerHTML =
+    '<option value="">アンケートを選択</option>' +
+    filtered.map(event => `
+      <option value="${escapeHTML(event.id)}">
+        ${escapeHTML(event.title)} (${escapeHTML(event.date)})
+      </option>
+    `).join("");
+
+  if (filtered.some(event => event.id === oldValue)) {
+    select.value = oldValue;
+  }
 }
 
 async function loadSummary() {
@@ -124,7 +162,8 @@ async function loadSummary() {
   const resultBox = document.getElementById("summaryResult");
 
   if (!eventId) {
-    resultBox.innerHTML = '<p class="muted">アンケートを選択してください。</p>';
+    resultBox.innerHTML =
+      '<p class="muted">アンケートを選択してください。</p>';
     return;
   }
 
@@ -144,6 +183,7 @@ async function loadSummary() {
           <p>回答合計：${rows.length}人</p>
         </div>
       </div>
+
       <div class="event-list">
         ${rows.map(row => `
           <article class="event-card">
@@ -151,11 +191,13 @@ async function loadSummary() {
               <h3>${escapeHTML(row.activityName)}</h3>
               <p>${escapeHTML(row.attendance)}</p>
             </div>
-          </article>`).join("")}
-      </div>`;
-
+          </article>
+        `).join("")}
+      </div>
+    `;
   } catch (error) {
-    resultBox.innerHTML = `<p class="message error">${escapeHTML(error.message)}</p>`;
+    resultBox.innerHTML =
+      `<p class="message error">${escapeHTML(error.message)}</p>`;
   }
 }
 
@@ -165,84 +207,129 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loginForm.addEventListener("submit", async event => {
     event.preventDefault();
+
     const password = document.getElementById("adminPassword").value;
     const message = document.getElementById("loginMessage");
+    const submitButton = loginForm.querySelector(
+      'button[type="submit"]'
+    );
+
     message.textContent = "認証中...";
+    submitButton.disabled = true;
 
     try {
-      const result = await apiPost({ action: "adminLogin", password });
+      const result = await apiPost({
+        action: "adminLogin",
+        password
+      });
+
       adminToken = result.token;
+
       document.getElementById("loginPanel").hidden = true;
       document.getElementById("adminContent").hidden = false;
+
       await loadAdminEvents();
     } catch (error) {
       message.className = "message error";
       message.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
     }
   });
 
-  document.querySelectorAll("#adminContent [data-team]").forEach(button => {
-    button.addEventListener("click", async () => {
-      adminTeam = button.dataset.team;
-      document.querySelectorAll("#adminContent [data-team]").forEach(item => {
-        item.classList.toggle("active", item === button);
+  document.querySelectorAll("#adminContent [data-team]")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        adminTeam = button.dataset.team;
+
+        document.querySelectorAll("#adminContent [data-team]")
+          .forEach(item => {
+            item.classList.toggle("active", item === button);
+          });
+
+        resetEventForm();
+        renderAdminEvents();
+        renderSummaryOptions();
+
+        document.getElementById("summaryResult").innerHTML =
+          '<p class="muted">アンケートを選択してください。</p>';
       });
-      resetEventForm();
-      renderAdminEvents();
-      renderSummaryOptions();
-      document.getElementById("summaryResult").innerHTML =
-        '<p class="muted">アンケートを選択してください。</p>';
     });
-  });
 
-  document.getElementById("eventForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    const id = document.getElementById("eventId").value;
-    const title = document.getElementById("eventTitle").value.trim();
-    const date = document.getElementById("eventDate").value;
-    const deadline = document.getElementById("eventDeadline").value;
+  document.getElementById("eventForm")
+    .addEventListener("submit", async event => {
+      event.preventDefault();
 
-    if (!title || !date || !deadline) {
-      adminMessage("すべての必須項目を入力してください。", "error");
-      return;
-    }
+      const id = document.getElementById("eventId").value;
+      const title = document.getElementById("eventTitle").value.trim();
+      const date = document.getElementById("eventDate").value;
+      const deadline = document.getElementById("eventDeadline").value;
 
-    if (new Date(deadline).getTime() <= Date.now()) {
-      adminMessage("締切日時は未来に設定してください。", "error");
-      return;
-    }
+      if (!title || !date || !deadline) {
+        adminMessage("すべての必須項目を入力してください。", "error");
+        return;
+      }
 
-    try {
-      await adminPost("adminSaveEvent", {
-        event: {
-          id, team: adminTeam, title, date,
-          deadline: new Date(deadline).toISOString(),
-          notifyCreate: document.getElementById("notifyCreate").checked,
-          notifyReminder: document.getElementById("notifyReminder").checked,
-          notifyDeadline: document.getElementById("notifyDeadline").checked
-        }
-      });
-      adminMessage("保存しました。", "success");
+      if (new Date(deadline).getTime() <= Date.now()) {
+        adminMessage("締切日時は未来に設定してください。", "error");
+        return;
+      }
+
+      const submitButton = event.submitter;
+      if (submitButton) submitButton.disabled = true;
+
+      try {
+        await adminPost("adminSaveEvent", {
+          event: {
+            id,
+            team: adminTeam,
+            title,
+            date,
+            deadline: new Date(deadline).toISOString(),
+            notifyCreate:
+              document.getElementById("notifyCreate").checked,
+            notifyReminder:
+              document.getElementById("notifyReminder").checked,
+            notifyDeadline:
+              document.getElementById("notifyDeadline").checked
+          }
+        });
+
+        adminMessage("保存しました。", "success");
+        resetEventForm();
+        await loadAdminEvents();
+      } catch (error) {
+        adminMessage(error.message, "error");
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
+    });
+
+  document.getElementById("cancelEdit")
+    .addEventListener("click", resetEventForm);
+
+  document.getElementById("refreshButton")
+    .addEventListener("click", async () => {
+      try {
+        await loadAdminEvents();
+      } catch (error) {
+        adminMessage(error.message, "error");
+      }
+    });
+
+  document.getElementById("summaryEvent")
+    .addEventListener("change", loadSummary);
+
+  document.getElementById("logoutButton")
+    .addEventListener("click", () => {
+      adminToken = "";
+      adminEvents = [];
+
+      document.getElementById("adminContent").hidden = true;
+      document.getElementById("loginPanel").hidden = false;
+      document.getElementById("adminPassword").value = "";
+      document.getElementById("loginMessage").textContent = "";
+
       resetEventForm();
-      await loadAdminEvents();
-    } catch (error) {
-      adminMessage(error.message, "error");
-    }
-  });
-
-  document.getElementById("cancelEdit").addEventListener("click", resetEventForm);
-  document.getElementById("refreshButton").addEventListener("click", async () => {
-    try { await loadAdminEvents(); }
-    catch (error) { adminMessage(error.message, "error"); }
-  });
-  document.getElementById("summaryEvent").addEventListener("change", loadSummary);
-
-  document.getElementById("logoutButton").addEventListener("click", () => {
-    adminToken = "";
-    adminEvents = [];
-    document.getElementById("adminContent").hidden = true;
-    document.getElementById("loginPanel").hidden = false;
-    document.getElementById("adminPassword").value = "";
-    resetEventForm();
-  });
+    });
 });
