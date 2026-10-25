@@ -4,7 +4,7 @@
    Public calendar + survey response
 ================================================== */
 
-const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+const API_URL = "https://script.google.com/macros/s/AKfycbwtDh72d1_op6qdud8xX9hwLdwlsrBPde9AtG5li2VTsCL4U8UQZiNZ3ms5UVjT9sMK/exec";
 
 const TEAM_NAMES = ["LYXEN Div", "NOXIA Div."];
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
