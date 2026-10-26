@@ -1,163 +1,779 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a0a0c">
-  <title>AdminCreate | Nimdgent Esports</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="favicon.png" type="image/png">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Nidmegent Esports PREMIER 管理画面">
+  <title>管理画面 | NIDMEGENT ESPORTS PREMIER</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090909;
+      --panel: #141414;
+      --panel2: #1b1b1b;
+      --border: #303030;
+      --text: #f5f5f5;
+      --muted: #a0a0a0;
+      --accent: #ef3434;
+      --accent-hover: #ff5050;
+      --green: #2ca66f;
+      --yellow: #d9a441;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at top right, rgba(239,52,52,.08), transparent 35%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: #ff7777;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(9,9,9,.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      font-weight: 900;
+      letter-spacing: .06em;
+      font-size: 15px;
+    }
+
+    .brand span {
+      color: var(--accent);
+    }
+
+    .header-sub {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .18em;
+      margin-top: 3px;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    main {
+      width: min(1200px, calc(100% - 32px));
+      margin: 35px auto 70px;
+    }
+
+    .page-title {
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      letter-spacing: .2em;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 5px 0;
+      font-size: clamp(27px, 4vw, 38px);
+      line-height: 1.25;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 20px;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    p {
+      margin-top: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #171717, #101010);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    }
+
+    .login-card {
+      max-width: 520px;
+      margin: 35px auto;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      min-width: 0;
+      margin-bottom: 15px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label,
+    .field-label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input:not([type="checkbox"]),
+    select {
+      display: block;
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      color: var(--text);
+      background: #090909;
+      border: 1px solid #3a3a3a;
+      border-radius: 9px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(239,52,52,.12);
+    }
+
+    input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 10px 15px;
+      color: white;
+      background: var(--accent);
+      font-weight: 800;
+      transition: .18s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      background: #252525;
+      border-color: #414141;
+    }
+
+    .btn.secondary:hover:not(:disabled) {
+      background: #333;
+    }
+
+    .btn.danger {
+      background: #5c1e1e;
+      border-color: #8d2a2a;
+    }
+
+    .btn.success {
+      background: #176c49;
+    }
+
+    .btn.small-btn {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .message.error {
+      color: #ff7c7c;
+    }
+
+    .message.success {
+      color: #6ee0a8;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+    }
+
+    .notice {
+      padding: 13px 15px;
+      border: 1px solid rgba(217,164,65,.35);
+      background: rgba(217,164,65,.07);
+      color: #e6cb92;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .team-pill {
+      display: inline-block;
+      border: 1px solid #494949;
+      background: #222;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      color: #ddd;
+      margin-bottom: 7px;
+    }
+
+    .notification-settings {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 5px 0 16px;
+    }
+
+    .notification-settings h3 {
+      margin-bottom: 5px;
+    }
+
+    .notification-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid #292929;
+    }
+
+    .notification-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .check-label span {
+      line-height: 1.45;
+    }
+
+    .check-label em {
+      display: block;
+      color: var(--muted);
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .form-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 12px 0 0;
+    }
+
+    .events-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .event-card {
+      background: #101010;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .event-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .event-title {
+      margin: 0 0 7px;
+      overflow-wrap: anywhere;
+    }
+
+    .event-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 4px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .status {
+      display: inline-block;
+      border-radius: 99px;
+      padding: 3px 9px;
+      font-size: 11px;
+      white-space: nowrap;
+      background: #1e513a;
+      color: #8ee0b5;
+    }
+
+    .status.closed {
+      background: #4a2424;
+      color: #ff9b9b;
+    }
+
+    .event-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .summary-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .summary-box {
+      border: 1px solid var(--border);
+      background: #0e0e0e;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .summary-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .summary-box strong {
+      display: block;
+      font-size: 27px;
+      margin-top: 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 11px 13px;
+      border-bottom: 1px solid #2b2b2b;
+    }
+
+    th {
+      background: #1d1d1d;
+      color: #ddd;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 22px;
+      border: 1px dashed #353535;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      text-align: center;
+      padding: 22px;
+      font-size: 11px;
+      letter-spacing: .08em;
+    }
+
+    @media (max-width: 700px) {
+      .header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px;
+      }
+
+      main {
+        width: min(100% - 22px, 1200px);
+        margin-top: 24px;
+      }
+
+      .card {
+        padding: 16px;
+        border-radius: 13px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .notification-row {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .event-card-top {
+        flex-direction: column;
+      }
+
+      .event-actions .btn {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">N</span>
-      <span>NIMDGENT <small>ADMIN PANEL</small></span>
-    </a>
-    <a class="back-link" href="index.html">公開ページ →</a>
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="brand">NIDMEGENT <span>ESPORTS</span></div>
+        <div class="header-sub">PREMIER · ADMIN CONTROL PANEL</div>
+      </div>
+
+      <nav class="header-links">
+        <a href="index.html">公開カレンダー</a>
+        <a href="survey.html">回答ページ</a>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <p class="eyebrow">ADMINISTRATION</p>
-      <h1>管理者<span>パネル</span></h1>
-      <p class="muted">チームごとの日程・締切・通知・回答を管理します。</p>
-    </section>
+  <main>
+    <div class="page-title">
+      <div class="eyebrow">ADMINISTRATION</div>
+      <h1>管理画面</h1>
+      <p class="muted">出場アンケート・Discord通知・回答集計を管理します。</p>
+    </div>
 
-    <section class="panel" id="loginPanel">
+    <!-- ログイン -->
+    <section class="card login-card" id="loginCard">
       <h2>管理者ログイン</h2>
-      <p class="muted">管理者パスワードを入力してください。</p>
 
-      <form id="loginForm">
-        <label for="adminPassword">パスワード</label>
-        <input id="adminPassword" type="password"
-          autocomplete="current-password" required>
+      <div class="field">
+        <label for="adminPassword">管理者パスワード</label>
+        <input
+          id="adminPassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="パスワードを入力"
+        >
+      </div>
 
-        <button class="primary-button" type="submit">ログイン</button>
-        <p id="loginMessage" class="message" aria-live="polite"></p>
-      </form>
+      <button class="btn" id="loginBtn" type="button">ログイン</button>
+      <div class="message" id="loginMessage" role="status" aria-live="polite"></div>
     </section>
 
-    <div id="adminContent" hidden>
-      <section class="panel">
+    <!-- 管理画面 -->
+    <div id="adminPanel" hidden>
+
+      <!-- イベント作成・編集 -->
+      <section class="card" id="eventFormCard">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">TEAM MANAGEMENT</p>
-            <h2>管理する部門</h2>
+            <h2 id="formHeading">アンケートを新規作成</h2>
+            <p class="muted small">入力後、保存すると公開カレンダーに反映されます。</p>
           </div>
-          <button id="logoutButton" class="secondary-button">ログアウト</button>
+          <button class="btn secondary" id="resetFormBtn" type="button">
+            新規作成に戻す
+          </button>
         </div>
 
-        <div class="division-tabs">
-          <button class="division-tab active" data-team="LYXEN Div">LYXEN Div</button>
-          <button class="division-tab" data-team="NOXIA Div.">NOXIA Div.</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <p class="eyebrow">CREATE / EDIT</p>
-        <h2 id="formHeading">アンケートを作成</h2>
-
-        <form id="eventForm" class="admin-form">
+        <form id="eventForm">
           <input type="hidden" id="eventId">
 
-          <div class="full">
-            <label for="eventTitle">アンケート名</label>
-            <input id="eventTitle" maxlength="100"
-              placeholder="例：PREMIER MATCH #01" required>
+          <div class="field-grid">
+            <div class="field">
+              <label for="team">チーム</label>
+              <select id="team" required>
+                <option value="LYXEN Div">LYXEN Div</option>
+                <option value="NOXIA Div.">NOXIA Div.</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="title">イベント名</label>
+              <input
+                id="title"
+                type="text"
+                maxlength="100"
+                required
+                placeholder="例：PREMIER 第1週"
+              >
+            </div>
+
+            <div class="field">
+              <label for="date">試合日</label>
+              <input id="date" type="date" required>
+            </div>
+
+            <div class="field">
+              <label for="deadline">回答締切日時</label>
+              <input id="deadline" type="datetime-local" required>
+            </div>
           </div>
 
-          <div>
-            <label for="eventDate">試合日</label>
-            <input id="eventDate" type="date" required>
+          <div class="notification-settings">
+            <h3>Discord通知設定</h3>
+            <p class="muted small">
+              「通知する」をOFFにすると、そのタイミングのDiscord通知を送信しません。
+              メンションだけをOFFにすることもできます。
+            </p>
+
+            <div class="notification-row">
+              <label class="check-label" for="notifyCreate">
+                <input id="notifyCreate" type="checkbox" checked>
+                <span>
+                  イベント作成時に通知する
+                  <em>新規アンケート作成時に送信</em>
+                </span>
+              </label>
+
+              <label class="check-label" for="mentionCreate">
+                <input id="mentionCreate" type="checkbox">
+                <span>
+                  ロールメンションする
+                  <em>作成通知でチームのロールを呼び出す</em>
+                </span>
+              </label>
+            </div>
+
+            <div class="notification-row">
+              <label class="check-label" for="notifyReminder">
+                <input id="notifyReminder" type="checkbox" checked>
+                <span>
+                  締切5日前に通知する
+                  <em>締切が近づいたことをお知らせ</em>
+                </span>
+              </label>
+
+              <label class="check-label" for="mentionReminder">
+                <input id="mentionReminder" type="checkbox">
+                <span>
+                  ロールメンションする
+                  <em>5日前通知でチームのロールを呼び出す</em>
+                </span>
+              </label>
+            </div>
+
+            <div class="notification-row">
+              <label class="check-label" for="notifyDeadline">
+                <input id="notifyDeadline" type="checkbox" checked>
+                <span>
+                  回答締切時に通知する
+                  <em>締切時に回答結果を通知</em>
+                </span>
+              </label>
+
+              <label class="check-label" for="mentionDeadline">
+                <input id="mentionDeadline" type="checkbox">
+                <span>
+                  ロールメンションする
+                  <em>締切通知でチームのロールを呼び出す</em>
+                </span>
+              </label>
+            </div>
+
+            <p class="form-note">
+              メンション先はチームに応じて自動で切り替わります。
+              ロールIDは管理画面で入力する必要はありません。
+            </p>
           </div>
 
-          <div>
-            <label for="eventDeadline">回答締切日時</label>
-            <input id="eventDeadline" type="datetime-local" required>
-          </div>
-
-          <div class="full">
-            <label class="checkbox-row">
-              <input id="notifyCreate" type="checkbox" checked>
-              作成・公開時にDiscordへ通知する
-            </label>
-
-            <label class="checkbox-row">
-              <input id="notifyReminder" type="checkbox" checked>
-              締切5日前にDiscordへ通知する
-            </label>
-
-            <label class="checkbox-row">
-              <input id="notifyDeadline" type="checkbox" checked>
-              締切時にDiscordへ通知する
-            </label>
-          </div>
-
-          <div class="full">
-            <button class="primary-button" type="submit">保存する</button>
-
-            <button id="cancelEdit" class="secondary-button"
-              type="button" hidden>
+          <div class="actions">
+            <button class="btn" id="saveEventBtn" type="submit">
+              アンケートを保存
+            </button>
+            <button class="btn secondary" id="cancelEditBtn" type="button" hidden>
               編集をキャンセル
             </button>
-
-            <p id="eventMessage" class="message" aria-live="polite"></p>
           </div>
+
+          <div class="message" id="eventFormMessage" role="status" aria-live="polite"></div>
         </form>
       </section>
 
-      <section class="panel">
+      <!-- イベント一覧 -->
+      <section class="card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">SCHEDULE</p>
-            <h2 id="adminListTitle">LYXEN Div のアンケート</h2>
+            <h2>登録済みアンケート</h2>
+            <p class="muted small">イベントの編集・削除・回答集計ができます。</p>
           </div>
-          <button id="refreshButton" class="secondary-button">更新</button>
+
+          <button class="btn secondary" id="reloadEventsBtn" type="button">
+            最新情報に更新
+          </button>
         </div>
 
-        <div id="adminEventList">
-          <p class="muted">読み込み中...</p>
+        <div class="field">
+          <label for="teamFilter">チームで絞り込み</label>
+          <select id="teamFilter">
+            <option value="all">すべてのチーム</option>
+            <option value="LYXEN Div">LYXEN Div</option>
+            <option value="NOXIA Div.">NOXIA Div.</option>
+          </select>
         </div>
-      </section>
 
-      <section class="panel">
-        <p class="eyebrow">RESPONSE SUMMARY</p>
-        <h2>回答集計</h2>
-
-        <label for="summaryEvent">集計するアンケート</label>
-        <select id="summaryEvent">
-          <option value="">アンケートを選択</option>
-        </select>
-
-        <div id="summaryResult" class="event-list">
-          <p class="muted">アンケートを選択してください。</p>
+        <div class="events-list" id="eventsList">
+          <div class="empty">アンケートを読み込んでいます。</div>
         </div>
+
+        <div class="message" id="eventsMessage" role="status" aria-live="polite"></div>
       </section>
 
-      <section class="panel">
-        <p class="eyebrow">MEMBER SETTINGS</p>
-        <h2>活動名の登録方法</h2>
-        <p class="muted">
-          Googleスプレッドシートの Members シートで活動名と所属部門を管理します。
-        </p>
-        <p class="muted">
-          A列：activityName ／ B列：team
-        </p>
-        <p class="muted">
-          部門は「LYXEN Div」または「NOXIA Div.」を正確に入力してください。
-        </p>
+      <!-- 回答集計 -->
+      <section class="card" id="summaryCard">
+        <div class="section-heading">
+          <div>
+            <h2>回答集計</h2>
+            <p class="muted small">選択したアンケートの回答状況を確認します。</p>
+          </div>
+        </div>
+
+        <div class="summary-controls">
+          <div class="field" style="margin-bottom:0">
+            <label for="summaryEvent">アンケート</label>
+            <select id="summaryEvent">
+              <option value="">アンケートを選択</option>
+            </select>
+          </div>
+
+          <button class="btn" id="loadSummaryBtn" type="button">
+            集計を表示
+          </button>
+        </div>
+
+        <div id="summaryResult" style="margin-top:18px">
+          <div class="empty">アンケートを選択して「集計を表示」を押してください。</div>
+        </div>
+
+        <div class="message" id="summaryMessage" role="status" aria-live="polite"></div>
       </section>
+
+      <div class="actions">
+        <button class="btn secondary" id="logoutBtn" type="button">ログアウト</button>
+      </div>
     </div>
-
-    <footer class="footer">
-      <span>NIMDGENT ESPORTS</span>
-      <span>ADMINISTRATION</span>
-    </footer>
   </main>
 
-  <script src="script.js"></script>
+  <footer>NIDMEGENT ESPORTS · PREMIER ADMIN</footer>
+
   <script src="admin.js"></script>
 </body>
 </html>
