@@ -31,7 +31,7 @@ function adminApiGet(params = {}) {
 
     const script = document.createElement("script");
 
-    const query = new URLSearchParams({
+    const query = new SearchParams({
       ...params,
       callback: callbackName
     });
@@ -63,7 +63,7 @@ function adminApiGet(params = {}) {
       reject(new Error("サーバーに接続できませんでした。"));
     };
 
-    script.src = API_URL + "?" + query.toString();
+    script.src = API_ + "?" + query.toString();
     document.body.appendChild(script);
   });
 }
@@ -86,7 +86,7 @@ function adminApiPost(payload) {
 
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = API_URL;
+    form.action = API_;
     form.target = "adminApiFrame";
     form.hidden = true;
 
