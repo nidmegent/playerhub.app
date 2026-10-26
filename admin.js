@@ -31,7 +31,7 @@ function adminApiGet(params = {}) {
 
     const script = document.createElement("script");
 
-    const query = new SearchParams({
+    const query = new URLSearchParams({
       ...params,
       callback: callbackName
     });
@@ -51,7 +51,11 @@ function adminApiGet(params = {}) {
       cleanup();
 
       if (!data || data.ok === false) {
-        reject(new Error(data?.error || "データの取得に失敗しました。"));
+        reject(
+          new Error(
+            data?.error || "データの取得に失敗しました。"
+          )
+        );
         return;
       }
 
@@ -60,20 +64,34 @@ function adminApiGet(params = {}) {
 
     script.onerror = () => {
       cleanup();
-      reject(new Error("サーバーに接続できませんでした。"));
+      reject(
+        new Error("サーバーに接続できませんでした。")
+      );
     };
 
-    script.src = API_ + "?" + query.toString();
+    script.src = API_URL + "?" + query.toString();
+
     document.body.appendChild(script);
   });
 }
 
 /* ==================================================
-   API POST: hidden iframe
+   API POST: hidden iframe + getPostResult
 ================================================== */
 
 function adminApiPost(payload) {
   return new Promise((resolve, reject) => {
+    const requestId =
+      "admin_" +
+      Date.now() +
+      "_" +
+      Math.random().toString(36).slice(2, 14);
+
+    const actualPayload = {
+      ...payload,
+      requestId
+    };
+
     let frame = document.getElementById("adminApiFrame");
 
     if (!frame) {
@@ -85,37 +103,29 @@ function adminApiPost(payload) {
     }
 
     const form = document.createElement("form");
+
     form.method = "POST";
-    form.action = API_;
+    form.action = API_URL;
     form.target = "adminApiFrame";
     form.hidden = true;
 
     const input = document.createElement("input");
+
     input.type = "hidden";
     input.name = "payload";
-    input.value = JSON.stringify(payload);
+    input.value = JSON.stringify(actualPayload);
 
     form.appendChild(input);
     document.body.appendChild(form);
 
-    const requestId =
-      "admin_" +
-      Date.now() +
-      "_" +
-      Math.random().toString(36).slice(2, 14);
-
-    // 送信するJSONにリクエストIDを含める
-    const actualPayload = {
-      ...payload,
-      requestId
-    };
-
-    input.value = JSON.stringify(actualPayload);
-
     let finished = false;
+    let polling = false;
+
+    const timeoutAt = Date.now() + 25000;
 
     const timeout = setTimeout(() => {
       finish();
+
       reject(
         new Error(
           "送信結果を確認できませんでした。ページを更新して状態を確認してください。"
@@ -125,42 +135,101 @@ function adminApiPost(payload) {
 
     function finish() {
       if (finished) return;
+
       finished = true;
 
       clearTimeout(timeout);
-      window.removeEventListener("message", onMessage);
       form.remove();
     }
 
-    function onMessage(event) {
-      if (
-        event.origin !== "https://script.google.com" &&
-        event.origin !== "https://script.googleusercontent.com"
-      ) {
-        return;
-      }
+    function schedulePoll() {
+      if (finished) return;
 
-      const result = event.data;
+      if (Date.now() >= timeoutAt) {
+        finish();
 
-      if (!result || result.type !== "nimdgent-api-result") {
-        return;
-      }
-
-      finish();
-
-      if (result.data?.ok) {
-        resolve(result.data);
-      } else {
         reject(
           new Error(
-            result.data?.error || "処理に失敗しました。"
+            "サーバーから処理結果が返ってきませんでした。"
           )
         );
+
+        return;
+      }
+
+      setTimeout(checkResult, 1000);
+    }
+
+    async function checkResult() {
+      if (finished || polling) return;
+
+      polling = true;
+
+      try {
+        const result = await adminApiGet({
+          action: "getPostResult",
+          requestId: requestId
+        });
+
+        polling = false;
+
+        // サーバー側で処理が完了していない場合は再確認
+        if (
+          result.pending === true ||
+          result.found === false ||
+          result.ready === false
+        ) {
+          schedulePoll();
+          return;
+        }
+
+        // GAS側が結果を包んで返す形式にも対応
+        const response =
+          result.result ||
+          result.data ||
+          result;
+
+        if (!response || response.ok === false) {
+          finish();
+
+          reject(
+            new Error(
+              response?.error ||
+              "サーバー側の処理に失敗しました。"
+            )
+          );
+
+          return;
+        }
+
+        finish();
+        resolve(response);
+
+      } catch (error) {
+        polling = false;
+
+        // 結果がまだ取得できない場合も、制限時間内は再確認する
+        schedulePoll();
       }
     }
 
-    window.addEventListener("message", onMessage);
-    form.submit();
+    try {
+      // POST送信
+      form.submit();
+
+      // 結果の取得を開始
+      schedulePoll();
+
+    } catch (error) {
+      finish();
+
+      reject(
+        new Error(
+          "サーバーへの送信に失敗しました：" +
+          error.message
+        )
+      );
+    }
   });
 }
 
